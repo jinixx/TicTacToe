@@ -1,0 +1,134 @@
+@mixin horizontalStrikeThrough($_lineWidth) {
+  content: "";
+  position: absolute;
+  height: 0;
+  width: $_lineWidth;
+  border-bottom: $_lineWidth solid #000;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 300%;
+}
+
+:root {
+  --marker-color-O: green;
+  --marker-color-X: red;
+}
+
+*,*::before,*::after {
+  box-sizing: border-box;
+}
+
+.App {
+  font-family: sans-serif;
+  text-align: center;
+  padding: .1rem 2rem;
+  max-width: 1000px;
+  min-width: 480px;
+}
+
+.board-container {
+  .board {
+    padding-bottom: 100%;
+    position: relative;
+    margin: 0 auto;
+    overflow: hidden;
+    
+    .board-inner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+  
+      .board-row {
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+
+        $lineWidth: 4px;
+        $borderWidth: 1px;
+        $gap: 2px;
+    
+        .board-cell {
+          display: flex;
+          flex: 1;
+          border: $borderWidth dotted #ccc;
+          margin: $gap / 2;
+          flex-direction: column;
+          text-align: center;
+          justify-content: center;
+          cursor: pointer;
+          position: relative;
+          overflow: visible;
+
+          svg {
+            max-width: 80%;
+            height: auto;
+            margin: 0 auto;
+
+            &.marker-O {
+              path {
+                fill: var(--marker-color-O);
+              }
+            }
+
+            &.marker-X {
+              path {
+                fill: var(--marker-color-X);
+              }
+            }
+          }
+
+          &.won {
+            &.vertical::after {
+              @include horizontalStrikeThrough($lineWidth);
+              transform: rotate(90deg);
+              left: 50%;
+              top: -$lineWidth;
+              transform-origin: 0px 50%;
+            }
+
+            &.horizontal::after {
+              @include horizontalStrikeThrough($lineWidth);
+              top: 50%;
+              transform-origin: ($lineWidth / 2) 50%;
+            }
+
+            &.diagonal::after {
+              @include horizontalStrikeThrough($lineWidth);
+              transform: rotate(45deg);
+              transform-origin: ($lineWidth / 2) 50%;
+            }
+
+            &.inverted-diagonal::after {
+              @include horizontalStrikeThrough($lineWidth);
+              transform: rotate(315deg);
+              top: 100%;
+              transform-origin: -($lineWidth / 2) 50%;
+            }
+          }
+  
+          &.disabled {
+            cursor: default;
+            pointer-events: none;
+          }
+        }
+      }
+    }
+  }
+  .board-controls {
+    display: flex;
+    flex-direction: row;
+    margin-top: 2rem;
+    justify-content: center;
+    > * {
+      margin: 0 .5rem;
+    }
+    .input-boardsize {
+      width: 40px;
+      text-align: center;
+      margin-right: .5rem; 
+    }
+  }
+}
