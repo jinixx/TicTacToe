@@ -200,8 +200,8 @@ export default function App() {
     <div className="App">
       <h1>Tic Tac Toe</h1>
       <p>
-        useHistoryTravel by ahooks is missing a reset method to reset history,
-        when create new board or reset, does not reset history at the moment.
+        useHistoryTravel by ahooks is missing a reset method to reset history.
+        When create new board or reset, it does not reset history at the moment.
       </p>
       <TicTacToe size={3} maxSize={9} />
     </div>
