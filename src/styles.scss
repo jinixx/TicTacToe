@@ -53,7 +53,7 @@
         .board-cell {
           display: flex;
           flex: 1;
-          border: $borderWidth dotted #ccc;
+          border: $borderWidth dashed #ccc;
           margin: $gap / 2;
           flex-direction: column;
           text-align: center;
@@ -129,6 +129,9 @@
       width: 40px;
       text-align: center;
       margin-right: .5rem; 
+    }
+    .btn-redo {
+      margin-left: .5rem
     }
   }
 }

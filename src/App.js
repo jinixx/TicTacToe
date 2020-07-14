@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useHistoryTravel } from "ahooks";
 import { IconO, IconX } from "./Icons";
 import "./styles.scss";
 
@@ -49,7 +50,8 @@ const Row = props => {
   );
 };
 
-const initialState = {
+const initialStateForTimeTravel = {
+  boardData: null,
   gameOver: false,
   moveCount: 0,
   turn: "O",
@@ -59,25 +61,30 @@ const initialState = {
 const TicTacToe = props => {
   const { size: _size = 3, maxSize = 9 } = props;
   const [size, setSize] = useState(_size);
-  const emptyBoardLayout = useMemo(() => getBoardLayout(size), [size]);
-  const [turn, setTurn] = useState(initialState.turn);
-  const [boardData, setBoardData] = useState(emptyBoardLayout);
-  const [moveCount, setMoveCount] = useState(initialState.moveCount);
-  const [winner, setWinner] = useState(initialState.winner);
-  const [gameOver, setGameOver] = useState(initialState.gameOver);
+  initialStateForTimeTravel.boardData = useMemo(() => getBoardLayout(size), [
+    size
+  ]);
+
+  // controller data
   const [targetSize, setTargetSize] = useState(_size);
 
-  const reset = () => {
-    setTurn(initialState.turn);
-    setMoveCount(initialState.moveCount);
-    setWinner(initialState.winner);
-    setGameOver(initialState.gameOver);
-  };
+  const {
+    value,
+    setValue,
+    backLength,
+    forwardLength,
+    back,
+    forward,
+    go
+  } = useHistoryTravel(initialStateForTimeTravel);
+
+  const { boardData, gameOver, moveCount, turn, winner } = value;
 
   const handlePlayerMove = cell => {
     const { rowIndex, cellIndex } = cell;
     if (!isValidMove(boardData[rowIndex][cellIndex].marker)) return;
 
+    const newState = { ...value };
     const _newBoardData = JSON.parse(JSON.stringify(boardData));
     _newBoardData[rowIndex][cellIndex].marker = turn;
 
@@ -89,29 +96,37 @@ const TicTacToe = props => {
     );
 
     if (winner) {
-      setWinner(winner);
+      newState.winner = winner;
+      newState.gameOver = true;
       for (let i = 0; i < winningCells.length; i++) {
         _newBoardData[winningCells[i][0]][winningCells[i][1]].won = true;
         _newBoardData[winningCells[i][0]][winningCells[i][1]].line = line;
       }
     } else {
-      setMoveCount(moveCount + 1);
-      setTurn(turn => (turn === "O" ? "X" : "O"));
+      newState.moveCount++;
+      newState.turn = turn === "O" ? "X" : "O";
+      if (newState.moveCount === Math.pow(size, 2)) {
+        newState.gameOver = true;
+      }
     }
 
-    setBoardData(_newBoardData);
+    newState.boardData = _newBoardData;
+
+    setValue(newState);
   };
 
-  useEffect(() => {
-    if (winner || moveCount === Math.pow(size, 2)) {
-      setGameOver(true);
-    }
-  }, [moveCount, size, winner]);
+  const reset = () => {
+    setValue(initialStateForTimeTravel);
+  };
 
+  const firstUpdate = useRef(true);
   useEffect(() => {
-    setBoardData(emptyBoardLayout);
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
     reset();
-  }, [emptyBoardLayout]);
+  }, [initialStateForTimeTravel.boardData]);
 
   const handleOnChangeInputSize = e => {
     setTargetSize(e.target.value.slice(0, 1));
@@ -126,7 +141,6 @@ const TicTacToe = props => {
   };
 
   const handleOnReset = () => {
-    setBoardData(emptyBoardLayout);
     reset();
   };
 
@@ -148,14 +162,30 @@ const TicTacToe = props => {
       </div>
       <div className="board-controls">
         <div>
+          <button
+            className="btn-undo"
+            disabled={backLength === 0}
+            onClick={back}
+          >
+            Undo
+          </button>
+          <button
+            className="btn-redo"
+            disabled={forwardLength === 0}
+            onClick={forward}
+          >
+            Redo
+          </button>
+        </div>
+        <div>
           <input
             className="input-boardsize"
             type="number"
-            onChange={e => handleOnChangeInputSize(e)}
+            onChange={handleOnChangeInputSize}
             placeholder="size"
             value={targetSize}
           />
-          <button disabled={!targetSize} onClick={() => handleCreateBoard()}>
+          <button disabled={!targetSize} onClick={handleCreateBoard}>
             Create board
           </button>
         </div>
@@ -169,6 +199,10 @@ export default function App() {
   return (
     <div className="App">
       <h1>Tic Tac Toe</h1>
+      <p>
+        useHistoryTravel by ahooks is missing a reset method to reset history,
+        when create new board or reset, does not reset history at the moment.
+      </p>
       <TicTacToe size={3} maxSize={9} />
     </div>
   );
